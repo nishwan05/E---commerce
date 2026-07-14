@@ -25,7 +25,7 @@ const ProductCard = ({ product }) => {
         cover={
           <img
             alt={product.name}
-            src={product.image}
+            src={`http://localhost:5000${product.image}`}
             style={{ height: "200px", objectFit: "contain" }}
           />
         }
@@ -39,47 +39,51 @@ const ProductCard = ({ product }) => {
         )}
 
         <div style={{ display: "flex", flexDirection: "row", gap: "8px", flexWrap: "wrap" }}>
-          {cartItem ? (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{ display: "flex", alignItems: "center", gap: "4px" }}
-            >
-              <Button onClick={() => decreaseQuantity(product._id)}>-</Button>
-              <Button>{cartItem.quantity}</Button>
-              <Button
-                disabled={cartItem.quantity >= product.stock}
-                onClick={() => increaseQuantity(product._id)}
-              >
-                +
-              </Button>
-            </div>
-          ) : (
-            <Button
-              type="primary"
-              disabled={product.stock <= 0}
-              onClick={(e) => { e.stopPropagation(); addToCart(product); }}
-            >
-              {product.stock > 0 ? "Add To Cart" : "Out of Stock"}
-            </Button>
-          )}
+          {!isAdmin && (
+            <>
+              {cartItem ? (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                >
+                  <Button onClick={() => decreaseQuantity(product._id)}>-</Button>
+                  <Button>{cartItem.quantity}</Button>
+                  <Button
+                    disabled={cartItem.quantity >= product.stock}
+                    onClick={() => increaseQuantity(product._id)}
+                  >
+                    +
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="primary"
+                  disabled={product.stock <= 0}
+                  onClick={(e) => { e.stopPropagation(); addToCart(product); }}
+                >
+                  {product.stock > 0 ? "Add To Cart" : "Out of Stock"}
+                </Button>
+              )}
 
-          <Button
-            type="primary"
-            disabled={product.stock <= 0}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!user) {
-                message.info("Please login to continue purchase", 3);
-                navigate("/login");
-              } else {
-                navigate("/checkout", {
-                  state: { product, quantity: cartItem ? cartItem.quantity : 1 },
-                });
-              }
-            }}
-          >
-            {product.stock > 0 ? "Buy Now" : "Out of Stock"}
-          </Button>
+              <Button
+                type="primary"
+                disabled={product.stock <= 0}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!user) {
+                    message.info("Please login to continue purchase", 3);
+                    navigate("/login");
+                  } else {
+                    navigate("/checkout", {
+                      state: { product, quantity: cartItem ? cartItem.quantity : 1 },
+                    });
+                  }
+                }}
+              >
+                {product.stock > 0 ? "Buy Now" : "Out of Stock"}
+              </Button>
+            </>
+          )}
 
           {isAdmin && (
             <>

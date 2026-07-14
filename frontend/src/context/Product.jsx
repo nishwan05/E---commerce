@@ -1,6 +1,19 @@
-import { createContext, useCallback, useContext, useRef, useState, useEffect } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+  useEffect,
+} from "react";
 import { message } from "antd";
-import { createProduct, deleteProduct, getBrands, getProducts, updateProduct } from "../api/productApi";
+import {
+  createProduct,
+  deleteProduct,
+  getBrands,
+  getProducts,
+  updateProduct,
+} from "../api/productApi";
 import { socket } from "../socket";
 
 const ProductContext = createContext();
@@ -9,8 +22,10 @@ const defaultPriceRange = [0, 100000];
 const sortProducts = (order, list = []) => {
   const sorted = [...list];
   if (!order) return sorted;
-  if (order === "name-asc") sorted.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-  if (order === "name-desc") sorted.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
+  if (order === "name-asc")
+    sorted.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  if (order === "name-desc")
+    sorted.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
   if (order === "price-asc") sorted.sort((a, b) => a.price - b.price);
   if (order === "price-desc") sorted.sort((a, b) => b.price - a.price);
   return sorted;
@@ -46,9 +61,17 @@ export const ProductProvider = ({ children }) => {
       if (pr[1] < 100000) q.maxPrice = pr[1];
       const res = await getProducts(q, controller.signal);
       if (reqId !== productReqId.current) return;
-      setProducts(sortProducts(sortOrderRef.current, Array.isArray(res?.data) ? res.data : []));
-    } catch (error) { console.log(error); }
-    finally { if (reqId === productReqId.current) setLoading(false); }
+      setProducts(
+        sortProducts(
+          sortOrderRef.current,
+          Array.isArray(res?.data) ? res.data : [],
+        ),
+      );
+    } catch (error) {
+      console.log(error);
+    } finally {
+      if (reqId === productReqId.current) setLoading(false);
+    }
   }, []);
 
   const fetchBrands = useCallback(async (params = {}) => {
@@ -58,69 +81,141 @@ export const ProductProvider = ({ children }) => {
       const res = await getBrands(params);
       if (reqId !== brandReqId.current) return;
       setAvailableBrands(Array.isArray(res?.data) ? res.data : []);
-    } catch (error) { console.log(error); }
+    } catch (error) {
+      console.log(error);
+    }
   }, []);
 
-  const handleSort = useCallback((order) => {
-    setSortOrder(order);
-    sortOrderRef.current = order === "default" ? null : order;
-    if (order === "default") fetchProducts(lastParams.current);
-    else setProducts((prev) => sortProducts(order, prev));
-  }, [fetchProducts]);
+  const handleSort = useCallback(
+    (order) => {
+      setSortOrder(order);
+      sortOrderRef.current = order === "default" ? null : order;
+      if (order === "default") fetchProducts(lastParams.current);
+      else setProducts((prev) => sortProducts(order, prev));
+    },
+    [fetchProducts],
+  );
 
-  const handleBrandChange = useCallback((brand, checked) => {
-    setSelectedBrands((prev) => {
-      const next = checked ? [...prev, brand] : prev.filter((b) => b !== brand);
-      filterRef.current = { ...filterRef.current, brands: next };
-      return next;
-    });
-    setTimeout(() => fetchProducts(lastParams.current), 0);
-  }, [fetchProducts]);
+  const handleBrandChange = useCallback(
+    (brand, checked) => {
+      setSelectedBrands((prev) => {
+        const next = checked
+          ? [...prev, brand]
+          : prev.filter((b) => b !== brand);
+        filterRef.current = { ...filterRef.current, brands: next };
+        return next;
+      });
+      setTimeout(() => fetchProducts(lastParams.current), 0);
+    },
+    [fetchProducts],
+  );
 
-  const handlePriceChange = useCallback((range) => {
-    setPriceRange(range);
-    filterRef.current = { ...filterRef.current, priceRange: range };
-    fetchProducts(lastParams.current);
-  }, [fetchProducts]);
+  const handlePriceChange = useCallback(
+    (range) => {
+      setPriceRange(range);
+      filterRef.current = { ...filterRef.current, priceRange: range };
+      fetchProducts(lastParams.current);
+    },
+    [fetchProducts],
+  );
 
-  const resetFilters = useCallback((params) => {
-    filterRef.current = { brands: [], priceRange: defaultPriceRange };
-    setSelectedBrands([]);
-    setPriceRange(defaultPriceRange);
-    const fp = params !== undefined ? params : lastParams.current.category ? { category: lastParams.current.category } : {};
-    fetchProducts(fp);
-    fetchBrands(fp);
-  }, [fetchBrands, fetchProducts]);
+  const resetFilters = useCallback(
+    (params) => {
+      filterRef.current = { brands: [], priceRange: defaultPriceRange };
+      setSelectedBrands([]);
+      setPriceRange(defaultPriceRange);
+      const fp =
+        params !== undefined
+          ? params
+          : lastParams.current.category
+            ? { category: lastParams.current.category }
+            : {};
+      fetchProducts(fp);
+      fetchBrands(fp);
+    },
+    [fetchBrands, fetchProducts],
+  );
 
-  const refreshBrands = useCallback(() =>
-    fetchBrands(lastParams.current.category ? { category: lastParams.current.category } : {}), [fetchBrands]);
+  const refreshBrands = useCallback(
+    () =>
+      fetchBrands(
+        lastParams.current.category
+          ? { category: lastParams.current.category }
+          : {},
+      ),
+    [fetchBrands],
+  );
 
-  const addProduct = useCallback(async (data) => {
-    await createProduct(data); await fetchProducts(lastParams.current); await refreshBrands();
-    message.success("Product added successfully", 3);
-  }, [fetchProducts, refreshBrands]);
+  const addProduct = useCallback(
+    async (formdata) => {
+      await createProduct(formdata);
+      await fetchProducts(lastParams.current);
+      await refreshBrands();
+      message.success("Product added successfully", 3);
+    },
+    [fetchProducts, refreshBrands],
+  );
 
-  const editProduct = useCallback(async (id, data) => {
-    await updateProduct(id, data); await fetchProducts(lastParams.current); await refreshBrands();
-    message.success("Product updated successfully", 3);
-  }, [fetchProducts, refreshBrands]);
+  const editProduct = useCallback(
+    async (id, formdata) => {
+      await updateProduct(id, formdata);
+      await fetchProducts(lastParams.current);
+      await refreshBrands();
+      message.success("Product updated successfully", 3);
+    },
+    [fetchProducts, refreshBrands],
+  );
 
-  const removeProduct = useCallback(async (id) => {
-    await deleteProduct(id);
-    setProducts((prev) => prev.filter((p) => p._id !== id));
-    await refreshBrands();
-    message.success("Product deleted successfully", 3);
-  }, [refreshBrands]);
+  const removeProduct = useCallback(
+    async (id) => {
+      await deleteProduct(id);
+      setProducts((prev) => prev.filter((p) => p._id !== id));
+      await refreshBrands();
+      message.success("Product deleted successfully", 3);
+    },
+    [refreshBrands],
+  );
 
   useEffect(() => {
-    socket.on("productCreated", () => { fetchProducts(lastParams.current); refreshBrands(); });
-    socket.on("productUpdated", () => { fetchProducts(lastParams.current); refreshBrands(); });
-    socket.on("productDeleted", () => { fetchProducts(lastParams.current); refreshBrands(); });
-    return () => { socket.off("productCreated"); socket.off("productUpdated"); socket.off("productDeleted"); };
+    socket.on("productCreated", () => {
+      fetchProducts(lastParams.current);
+      refreshBrands();
+    });
+    socket.on("productUpdated", () => {
+      fetchProducts(lastParams.current);
+      refreshBrands();
+    });
+    socket.on("productDeleted", () => {
+      fetchProducts(lastParams.current);
+      refreshBrands();
+    });
+    return () => {
+      socket.off("productCreated");
+      socket.off("productUpdated");
+      socket.off("productDeleted");
+    };
   }, [fetchProducts, refreshBrands]);
 
   return (
-    <ProductContext.Provider value={{ products, loading, sortOrder, availableBrands, selectedBrands, priceRange, handleSort, fetchProducts, fetchBrands, handleBrandChange, handlePriceChange, resetFilters, addProduct, editProduct, removeProduct }}>
+    <ProductContext.Provider
+      value={{
+        products,
+        loading,
+        sortOrder,
+        availableBrands,
+        selectedBrands,
+        priceRange,
+        handleSort,
+        fetchProducts,
+        fetchBrands,
+        handleBrandChange,
+        handlePriceChange,
+        resetFilters,
+        addProduct,
+        editProduct,
+        removeProduct,
+      }}
+    >
       {children}
     </ProductContext.Provider>
   );

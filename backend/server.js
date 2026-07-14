@@ -1,4 +1,5 @@
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, "utils", ".env") });
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -25,7 +26,12 @@ const app = express();
 const server = http.createServer(app);
 
 app.use(express.json());
-app.use(cors({ origin: process.env.CLIENT_ORIGIN || "http://localhost:5173", credentials: true }));
+app.use(
+  cors({
+    origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
+    credentials: true,
+  }),
+);
 app.use(cookieParser());
 
 app.use("/api/products", productRouter);
@@ -38,9 +44,13 @@ app.use("/api/chat", chatRouter);
 app.use("/api/tickets", ticketRouter);
 app.use("/api/permissions", permissionRouter);
 app.use("/api/orders", orderRouter);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const io = new Server(server, {
-  cors: { origin: process.env.CLIENT_ORIGIN || "http://localhost:5173", credentials: true },
+  cors: {
+    origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
+    credentials: true,
+  },
 });
 app.set("io", io);
 
@@ -50,12 +60,16 @@ io.on("connection", (socket) => {
   socket.on("sendMessage", async (data) => {
     const ticket = await Ticket.findById(data.ticketId);
     if (!ticket || ticket.status === "closed") return;
-    if (data.sender === "admin" && ticket.claimedBy?.toString() !== data.adminId) return;
+    if (
+      data.sender === "admin" &&
+      ticket.claimedBy?.toString() !== data.adminId
+    )
+      return;
     const message = await Chat.create(data);
     const updatedTicket = await Ticket.findByIdAndUpdate(
       data.ticketId,
       { lastMessage: message.message, lastMessageAt: message.createdAt },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
     io.to(data.ticketId).emit("newMessage", message);
     io.emit("conversationUpdated", { message, ticket: updatedTicket });
@@ -71,7 +85,7 @@ io.on("connection", (socket) => {
     const ticket = await Ticket.findOneAndUpdate(
       { _id: ticketId, status: "pending" },
       { status: "claimed", claimedBy: adminId, claimedByName: adminName },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
     if (!ticket) return;
     io.emit("ticketUpdated", ticket);
@@ -80,9 +94,13 @@ io.on("connection", (socket) => {
   socket.on("closeTicket", async ({ ticketId, userId }) => {
     if (!mongoose.Types.ObjectId.isValid(ticketId)) return;
     const ticket = await Ticket.findOneAndUpdate(
-      { _id: ticketId, status: { $ne: "closed" }, $or: [{ userId }, { claimedBy: userId }] },
+      {
+        _id: ticketId,
+        status: { $ne: "closed" },
+        $or: [{ userId }, { claimedBy: userId }],
+      },
       { status: "closed" },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
     if (!ticket) return;
     io.emit("ticketUpdated", ticket);

@@ -1,27 +1,60 @@
-import { useEffect } from "react";
-import { Modal, Form, Input, InputNumber, Select, message } from "antd";
+import { useEffect, useState } from "react";
+import { Modal, Form, Input, InputNumber, Select, Upload, message } from "antd";
 import { useProducts } from "../context/Product";
 
-const ProductModal = ({ open, onClose, onSuccess, mode = "create", product = null }) => {
+const normFile = (e) => {
+  if (Array.isArray(e)) return e;
+  return e?.fileList || [];
+};
+
+const ProductModal = ({
+  open,
+  onClose,
+  onSuccess,
+  mode = "create",
+  product = null,
+}) => {
   const [form] = Form.useForm();
+  const [fileList, setFileList] = useState([]);
   const { addProduct, editProduct } = useProducts();
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      form.resetFields();
+      setFileList([]);
+      return;
+    }
     if (mode === "edit" && product) {
-      form.setFieldsValue(product);
+      form.setFieldsValue({ ...product, image: [] });
+      setFileList([]);
     } else {
       form.resetFields();
+      setFileList([]);
     }
   }, [product, mode, form, open]);
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      const formData = new FormData();
+
+      Object.entries(values).forEach(([key, value]) => {
+        if (key === "image") {
+          const file = value?.[0]?.originFileObj;
+          if (file) {
+            formData.append("image", file);
+          }
+          return;
+        }
+        if (value !== undefined && value !== null) {
+          formData.append(key, value);
+        }
+      });
+
       if (mode === "create") {
-        await addProduct(values);
+        await addProduct(formData);
       } else {
-        await editProduct(product._id, values);
+        await editProduct(product._id, formData);
       }
       onSuccess?.();
       onClose();
@@ -46,19 +79,41 @@ const ProductModal = ({ open, onClose, onSuccess, mode = "create", product = nul
         <Form.Item label="Name" name="name" rules={[{ required: true }]}>
           <Input />
         </Form.Item>
-        <Form.Item label="Brand" name="brand" rules={[{ required: true, message: "Brand is required" }]}>
+        <Form.Item
+          label="Brand"
+          name="brand"
+          rules={[{ required: true, message: "Brand is required" }]}
+        >
           <Input />
         </Form.Item>
         <Form.Item label="Price" name="price" rules={[{ required: true }]}>
           <InputNumber style={{ width: "100%" }} />
         </Form.Item>
-        <Form.Item label="Image URL" name="image">
-          <Input />
+        <Form.Item
+          label="Image"
+          name="image"
+          valuePropName="fileList"
+          getValueFromEvent={normFile}
+          rules={[{ required: mode === "create", message: "Image is required" }]}
+        >
+          <Upload.Dragger
+            beforeUpload={() => false}
+            fileList={fileList}
+            onChange={({ fileList: nextFileList }) => setFileList(nextFileList)}
+            accept="image/*"
+          >
+            <p className="ant-upload-drag-icon"> </p>
+            <p className="ant-upload-text">Click or drag file to this area to upload</p>
+          </Upload.Dragger>
         </Form.Item>
         <Form.Item label="Description" name="description">
           <Input.TextArea rows={3} />
         </Form.Item>
-        <Form.Item label="Category" name="category" rules={[{ required: true }]}>
+        <Form.Item
+          label="Category"
+          name="category"
+          rules={[{ required: true }]}
+        >
           <Select
             options={[
               { label: "Mobile", value: "mobile" },

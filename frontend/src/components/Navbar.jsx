@@ -4,7 +4,7 @@ import { Layout, Button, Badge, Input, Select, Divider, message } from "antd";
 import { useMemo } from "react";
 import { useAccess } from "../context/AccessContext";
 import { getPages } from "../api/pageApi";
-import { ShoppingCartOutlined, PlusOutlined, LogoutOutlined } from "@ant-design/icons";
+import { ShoppingCartOutlined, PlusOutlined, LogoutOutlined, FileTextOutlined } from "@ant-design/icons";
 import { useCart } from "../features/cart/useCart";
 import { useProducts } from "../context/Product";
 import ProductModal from "./ProductModal";
@@ -97,8 +97,21 @@ const Navbar = () => {
             </span>
           ))}
 
+          {/* My Orders — visible to logged-in non-admin users */}
           {user && !isAdmin && (
-            <Button type="primary" onClick={() => navigate("/requests")}>Raise Request</Button>
+            <span
+              className={location.pathname === "/orders" ? "nav-active" : ""}
+              onClick={() => navigate("/orders")}
+            >
+              My Orders
+            </span>
+          )}
+
+          {/* Raise Request — visible to logged-in non-admin users */}
+          {user && !isAdmin && (
+            <Button type="primary" onClick={() => navigate("/requests")}>
+              Raise Request
+            </Button>
           )}
         </nav>
 
@@ -170,9 +183,11 @@ const Navbar = () => {
             <Button className="navbar-ghost-btn" onClick={() => navigate("/login")}>Login</Button>
           )}
 
-          <Badge count={totalItems} showZero>
-            <Button icon={<ShoppingCartOutlined />} onClick={() => setCartOpen(true)} />
-          </Badge>
+          {!isAdmin && (
+            <Badge count={totalItems} showZero>
+              <Button icon={<ShoppingCartOutlined />} onClick={() => setCartOpen(true)} />
+            </Badge>
+          )}
         </div>
       </Header>
 

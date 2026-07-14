@@ -9,6 +9,7 @@ const CartDrawer = ({ open, onClose }) => {
   const { cartItems, increaseQuantity, decreaseQuantity, removeFromCart, clearCart, totalItems, totalPrice } = useCart();
   const navigate = useNavigate();
   const user = useSelector((state) => state.auth.user);
+  const isAdmin = ["admin", "superadmin"].includes(user?.role);
 
   const handleCheckout = () => {
     if (!user) { message.info("Please login to continue", 3); navigate("/login"); onClose(); return; }
@@ -39,10 +40,12 @@ const CartDrawer = ({ open, onClose }) => {
           ))}
           <Divider />
           <h3 className="cart-total">Total: ₹ {totalPrice}</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <Button type="primary" size="large" style={{ width: "100%" }} onClick={handleCheckout}>Proceed to Checkout</Button>
-            <Button danger onClick={clearCart} style={{ width: "100%" }}>Clear Cart</Button>
-          </div>
+          {!isAdmin && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <Button type="primary" size="large" style={{ width: "100%" }} onClick={handleCheckout}>Proceed to Checkout</Button>
+              <Button danger onClick={clearCart} style={{ width: "100%" }}>Clear Cart</Button>
+            </div>
+          )}
         </>
       )}
     </Drawer>

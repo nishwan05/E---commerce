@@ -13,6 +13,8 @@ import SuperAdminRoute from "./SuperAdminRoute";
 import SupportTable from "../components/SupportTable";
 import SupportChatPage from "../pages/SupportPage";
 import RequestPage from "../pages/RequestPage";
+import OrdersPage from "../pages/OrdersPage";
+import NotFoundPage from "../pages/NotFoundPage";
 
 const AppRoutes = () => (
   <Routes>
@@ -30,6 +32,8 @@ const AppRoutes = () => (
     <Route path="/support" element={<SupportTable />} />
     <Route path="/support/:ticketId" element={<SupportChatPage />} />
     <Route path="/requests" element={<RequestPage />} />
+    <Route path="/orders" element={<OrdersPage />} />
+    <Route path="*" element={<NotFoundPage />} />
   </Routes>
 );
 
