@@ -66,7 +66,8 @@ const SupportChatPage = () => {
   const userId = user?.id || user?._id;
   const isAdmin = ["admin", "superadmin"].includes(user?.role);
   const isTicketOwner = String(ticket?.userId) === String(userId);
-  const isAssignedAdmin = isAdmin && String(ticket?.claimedBy) === String(userId);
+  const isAssignedAdmin =
+    isAdmin && String(ticket?.claimedBy) === String(userId);
 
   const canReply =
     ticket?.status !== "closed" &&
@@ -78,7 +79,10 @@ const SupportChatPage = () => {
 
   const sendReply = () => {
     if (!text.trim()) return;
-    if (!canReply) { message.warning("You cannot reply to this ticket"); return; }
+    if (!canReply) {
+      message.warning("You cannot reply to this ticket");
+      return;
+    }
     socket.emit("sendMessage", {
       ticketId,
       adminId: isAdmin ? userId : undefined,
@@ -100,7 +104,15 @@ const SupportChatPage = () => {
     <Card title={`Support Chat - ${ticket?.subject || ticketId}`}>
       <div style={{ marginBottom: 16 }}>
         <Text strong>Status: </Text>
-        <Text type={ticket?.status === "closed" ? "danger" : ticket?.status === "claimed" ? "warning" : "success"}>
+        <Text
+          type={
+            ticket?.status === "closed"
+              ? "danger"
+              : ticket?.status === "claimed"
+                ? "warning"
+                : "success"
+          }
+        >
           {ticket?.status?.toUpperCase() || "PENDING"}
         </Text>
       </div>
@@ -113,7 +125,9 @@ const SupportChatPage = () => {
       )}
 
       {canClose && (
-        <Button danger onClick={handleCloseTicket} style={{ marginBottom: 16 }}>Close Ticket</Button>
+        <Button danger onClick={handleCloseTicket} style={{ marginBottom: 16 }}>
+          Close Ticket
+        </Button>
       )}
 
       <div style={{ height: "60vh", overflowY: "auto", marginBottom: 20 }}>
@@ -121,16 +135,49 @@ const SupportChatPage = () => {
           loading={loading}
           dataSource={messages}
           renderItem={(item) => {
-            const isOwnMessage = (isAdmin && item.sender === "admin") || (!isAdmin && item.sender === "user");
+            const isOwnMessage =
+              (isAdmin && item.sender === "admin") ||
+              (!isAdmin && item.sender === "user");
             return (
-              <List.Item style={{ borderBlockEnd: "none", justifyContent: isOwnMessage ? "flex-end" : "flex-start", padding: "6px 0" }}>
-                <div style={{ maxWidth: "72%", padding: "8px 12px", borderRadius: 8, background: isOwnMessage ? "#1677ff" : "#f0f0f0", color: isOwnMessage ? "#fff" : "inherit", textAlign: "left" }}>
-                  <Text strong style={{ color: isOwnMessage ? "#fff" : undefined }}>{item.name}</Text>{" "}
-                  <Text style={{ color: isOwnMessage ? "#fff" : undefined }}>({item.role})</Text>
+              <List.Item
+                style={{
+                  borderBlockEnd: "none",
+                  justifyContent: isOwnMessage ? "flex-end" : "flex-start",
+                  padding: "6px 0",
+                }}
+              >
+                <div
+                  style={{
+                    maxWidth: "72%",
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    background: isOwnMessage ? "#1677ff" : "#f0f0f0",
+                    color: isOwnMessage ? "#fff" : "inherit",
+                    textAlign: "left",
+                  }}
+                >
+                  <Text
+                    strong
+                    style={{ color: isOwnMessage ? "#fff" : undefined }}
+                  >
+                    {item.name}
+                  </Text>{" "}
+                  <Text style={{ color: isOwnMessage ? "#fff" : undefined }}>
+                    ({item.role})
+                  </Text>
                   <br />
-                  <Text style={{ color: isOwnMessage ? "#fff" : undefined }}>{item.message}</Text>
+                  <Text style={{ color: isOwnMessage ? "#fff" : undefined }}>
+                    {item.message}
+                  </Text>
                   <br />
-                  <Text style={{ color: isOwnMessage ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.45)", fontSize: 12 }}>
+                  <Text
+                    style={{
+                      color: isOwnMessage
+                        ? "rgba(255,255,255,0.75)"
+                        : "rgba(0,0,0,0.45)",
+                      fontSize: 12,
+                    }}
+                  >
                     {new Date(item.createdAt).toLocaleString()}
                   </Text>
                 </div>
@@ -141,18 +188,31 @@ const SupportChatPage = () => {
       </div>
 
       {ticket?.status === "closed" && (
-        <Text type="danger">This ticket has been closed. No further messages can be sent.</Text>
+        <Text type="danger">
+          This ticket has been closed. No further messages can be sent.
+        </Text>
       )}
 
       <Input.TextArea
         rows={3}
         value={text}
         disabled={!canReply}
-        placeholder={ticket?.status === "closed" ? "This ticket is closed" : canReply ? "Type your message..." : "You cannot reply to this ticket"}
+        placeholder={
+          ticket?.status === "closed"
+            ? "This ticket is closed"
+            : canReply
+              ? "Type your message..."
+              : "You cannot reply to this ticket"
+        }
         onChange={(e) => setText(e.target.value)}
         style={{ marginTop: 10 }}
       />
-      <Button type="primary" onClick={sendReply} disabled={!canReply} style={{ marginTop: 10 }}>
+      <Button
+        type="primary"
+        onClick={sendReply}
+        disabled={!canReply}
+        style={{ marginTop: 10 }}
+      >
         Send Reply
       </Button>
     </Card>

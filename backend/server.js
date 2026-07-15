@@ -1,5 +1,4 @@
-const path = require("path");
-require("dotenv").config({ path: path.join(__dirname, "utils", ".env") });
+require("dotenv").config({ path: require("path").join(__dirname, ".env") });
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -21,6 +20,7 @@ const chatRouter = require("./routes/chatRouter");
 const ticketRouter = require("./routes/ticketRouter");
 const permissionRouter = require("./routes/permissionRouter");
 const orderRouter = require("./routes/orderRouter");
+const notificationRouter = require("./routes/notificationRouter");
 
 const app = express();
 const server = http.createServer(app);
@@ -44,7 +44,7 @@ app.use("/api/chat", chatRouter);
 app.use("/api/tickets", ticketRouter);
 app.use("/api/permissions", permissionRouter);
 app.use("/api/orders", orderRouter);
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/api/notifications", notificationRouter);
 
 const io = new Server(server, {
   cors: {
@@ -52,10 +52,16 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+
 app.set("io", io);
 
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
+
+  socket.on("joinUserRoom", (userId) => {
+    socket.join(`user_${userId}`);
+    console.log(`User ${userId} joined personal room`);
+  });
 
   socket.on("sendMessage", async (data) => {
     const ticket = await Ticket.findById(data.ticketId);
@@ -109,8 +115,13 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => console.log("Client disconnected:", socket.id));
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 const MONGOOSE_URI = process.env.MONGOOSE_URI;
+
+if (!MONGOOSE_URI) {
+  logger.error("MONGOOSE_URI is not defined. Check backend/.env");
+  process.exit(1);
+}
 
 mongoose
   .connect(MONGOOSE_URI)

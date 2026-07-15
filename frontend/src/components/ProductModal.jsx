@@ -94,7 +94,9 @@ const ProductModal = ({
           name="image"
           valuePropName="fileList"
           getValueFromEvent={normFile}
-          rules={[{ required: mode === "create", message: "Image is required" }]}
+          rules={[
+            { required: mode === "create", message: "Image is required" },
+          ]}
         >
           <Upload.Dragger
             beforeUpload={() => false}
@@ -103,7 +105,9 @@ const ProductModal = ({
             accept="image/*"
           >
             <p className="ant-upload-drag-icon"> </p>
-            <p className="ant-upload-text">Click or drag file to this area to upload</p>
+            <p className="ant-upload-text">
+              Click or drag file to this area to upload
+            </p>
           </Upload.Dragger>
         </Form.Item>
         <Form.Item label="Description" name="description">

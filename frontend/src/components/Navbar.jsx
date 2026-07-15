@@ -4,11 +4,17 @@ import { Layout, Button, Badge, Input, Select, Divider, message } from "antd";
 import { useMemo } from "react";
 import { useAccess } from "../context/AccessContext";
 import { getPages } from "../api/pageApi";
-import { ShoppingCartOutlined, PlusOutlined, LogoutOutlined, FileTextOutlined } from "@ant-design/icons";
+import {
+  ShoppingCartOutlined,
+  PlusOutlined,
+  LogoutOutlined,
+  OrderedListOutlined,
+} from "@ant-design/icons";
 import { useCart } from "../features/cart/useCart";
 import { useProducts } from "../context/Product";
 import ProductModal from "./ProductModal";
 import CartDrawer from "./CartDrawer";
+import NotificationBell from "./NotificationBell";
 import { useSelector, useDispatch } from "react-redux";
 import debounce from "lodash/debounce";
 import { logout } from "../features/auth/authSlice";
@@ -32,22 +38,30 @@ const Navbar = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [pages, setPages] = useState([]);
-  const { fetchProducts, fetchBrands, handleSort, sortOrder, resetFilters } = useProducts();
+  const { fetchProducts, fetchBrands, handleSort, sortOrder, resetFilters } =
+    useProducts();
   const { hasAccess } = useAccess();
 
   const debouncedSearch = useMemo(
     () =>
       debounce((value) => {
         if (value.trim()) {
-          fetchProducts({ search: value, ...(currentCategory && { category: currentCategory }) });
+          fetchProducts({
+            search: value,
+            ...(currentCategory && { category: currentCategory }),
+          });
         } else {
           fetchProducts(currentCategory ? { category: currentCategory } : {});
         }
       }, 300),
-    [fetchProducts, currentCategory]
+    [fetchProducts, currentCategory],
   );
 
-  useEffect(() => { return () => { debouncedSearch.cancel(); }; }, [debouncedSearch]);
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
 
   useEffect(() => {
     const fetchPages = async () => {
@@ -74,7 +88,12 @@ const Navbar = () => {
       <Header className="navbar">
         <div
           className="navbar-logo"
-          onClick={() => { resetFilters({}); fetchProducts(); fetchBrands(); navigate("/"); }}
+          onClick={() => {
+            resetFilters({});
+            fetchProducts();
+            fetchBrands();
+            navigate("/");
+          }}
         >
           EVEREST
         </div>
@@ -82,7 +101,12 @@ const Navbar = () => {
         <nav className="navbar-menu">
           <span
             className={location.pathname === "/" ? "nav-active" : ""}
-            onClick={() => { resetFilters({}); fetchProducts(); fetchBrands(); navigate("/"); }}
+            onClick={() => {
+              resetFilters({});
+              fetchProducts();
+              fetchBrands();
+              navigate("/");
+            }}
           >
             Home
           </span>
@@ -97,7 +121,6 @@ const Navbar = () => {
             </span>
           ))}
 
-          {/* My Orders — visible to logged-in non-admin users */}
           {user && !isAdmin && (
             <span
               className={location.pathname === "/orders" ? "nav-active" : ""}
@@ -107,7 +130,6 @@ const Navbar = () => {
             </span>
           )}
 
-          {/* Raise Request — visible to logged-in non-admin users */}
           {user && !isAdmin && (
             <Button type="primary" onClick={() => navigate("/requests")}>
               Raise Request
@@ -117,7 +139,9 @@ const Navbar = () => {
 
         <div className="navbar-controls">
           {isSuperAdmin && (
-            <Button onClick={() => navigate("/manageaccess")}>Manage Access</Button>
+            <Button onClick={() => navigate("/manageaccess")}>
+              Manage Access
+            </Button>
           )}
 
           <Input.Search
@@ -143,19 +167,39 @@ const Navbar = () => {
             ]}
           />
 
-          {isAdmin && <Button onClick={() => navigate("/support")}>Support</Button>}
+          {isAdmin && (
+            <Button onClick={() => navigate("/support")}>Support</Button>
+          )}
 
           {isAdmin && (
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
+            <Button
+              icon={<OrderedListOutlined />}
+              onClick={() => navigate("/admin/orders")}
+              title="All Orders"
+            >
+              Orders
+            </Button>
+          )}
+
+          {isAdmin && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setModalOpen(true)}
+            >
               Add Product
             </Button>
           )}
 
           <Divider orientation="vertical" className="navbar-divider" />
 
+          {user && <NotificationBell />}
+
           {user ? (
             <>
-              <span className="navbar-username">Hi, {user?.name?.split(" ")[0] || "User"}</span>
+              <span className="navbar-username">
+                Hi, {user?.name?.split(" ")[0] || "User"}
+              </span>
               <Button
                 icon={<LogoutOutlined />}
                 className="navbar-ghost-btn"
@@ -180,14 +224,20 @@ const Navbar = () => {
               </Button>
             </>
           ) : (
-            <Button className="navbar-ghost-btn" onClick={() => navigate("/login")}>Login</Button>
+            <Button
+              className="navbar-ghost-btn"
+              onClick={() => navigate("/login")}
+            >
+              Login
+            </Button>
           )}
 
-          {!isAdmin && (
-            <Badge count={totalItems} showZero>
-              <Button icon={<ShoppingCartOutlined />} onClick={() => setCartOpen(true)} />
-            </Badge>
-          )}
+          <Badge count={totalItems} showZero>
+            <Button
+              icon={<ShoppingCartOutlined />}
+              onClick={() => setCartOpen(true)}
+            />
+          </Badge>
         </div>
       </Header>
 

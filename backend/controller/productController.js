@@ -10,13 +10,11 @@ const createProduct = async (req, res) => {
     const product = await Product.create(productData);
     const io = req.app.get("io");
     io.emit("productCreated", product);
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: "Product added successfully",
-        data: product,
-      });
+    res.status(201).json({
+      success: true,
+      message: "Product added successfully",
+      data: product,
+    });
   } catch (error) {
     logger.error(error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
@@ -42,13 +40,11 @@ const getProducts = async (req, res) => {
       if (maxPrice) filter.price.$lte = Number(maxPrice);
     }
     const products = await Product.find(filter).sort({ createdAt: -1 });
-    res
-      .status(200)
-      .json({
-        success: true,
-        count: products?.length || 0,
-        data: products || [],
-      });
+    res.status(200).json({
+      success: true,
+      count: products?.length || 0,
+      data: products || [],
+    });
   } catch (error) {
     logger.error(error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
@@ -89,13 +85,11 @@ const updateProduct = async (req, res) => {
         .json({ success: false, message: "Product not found" });
     const io = req.app.get("io");
     io.emit("productUpdated", product);
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Product updated successfully",
-        data: product,
-      });
+    res.status(200).json({
+      success: true,
+      message: "Product updated successfully",
+      data: product,
+    });
   } catch (error) {
     logger.error(error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
@@ -152,23 +146,19 @@ const purchaseProducts = async (req, res) => {
         { new: true },
       );
       if (!product)
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: `${item.productName} has insufficient stock`,
-          });
+        return res.status(400).json({
+          success: false,
+          message: `${item.productName} has insufficient stock`,
+        });
       updatedProducts.push(product);
     }
     const io = req.app.get("io");
     io.emit("stockUpdated", updatedProducts);
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "Purchase successful",
-        data: updatedProducts,
-      });
+    return res.status(200).json({
+      success: true,
+      message: "Purchase successful",
+      data: updatedProducts,
+    });
   } catch (error) {
     logger.error(error);
     res.status(500).json({ success: false, message: "Purchase failed" });

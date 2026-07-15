@@ -7,7 +7,8 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 const ProductCard = ({ product }) => {
-  const { cartItems, addToCart, increaseQuantity, decreaseQuantity } = useCart();
+  const { cartItems, addToCart, increaseQuantity, decreaseQuantity } =
+    useCart();
   const { removeProduct } = useProducts();
   const [editOpen, setEditOpen] = useState(false);
   const navigate = useNavigate();
@@ -21,11 +22,15 @@ const ProductCard = ({ product }) => {
       <Card
         className="product-card"
         hoverable
-        onClick={() => navigate(`/product/${product.category}/${product._id}`, { state: { product } })}
+        onClick={() =>
+          navigate(`/product/${product.category}/${product._id}`, {
+            state: { product },
+          })
+        }
         cover={
           <img
             alt={product.name}
-            src={`http://localhost:5000${product.image}`}
+            src={`http://localhost:5001${product.image}`}
             style={{ height: "200px", objectFit: "contain" }}
           />
         }
@@ -38,7 +43,14 @@ const ProductCard = ({ product }) => {
           <p style={{ color: "red" }}>Only {product.stock} left</p>
         )}
 
-        <div style={{ display: "flex", flexDirection: "row", gap: "8px", flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            gap: "8px",
+            flexWrap: "wrap",
+          }}
+        >
           {!isAdmin && (
             <>
               {cartItem ? (
@@ -46,7 +58,9 @@ const ProductCard = ({ product }) => {
                   onClick={(e) => e.stopPropagation()}
                   style={{ display: "flex", alignItems: "center", gap: "4px" }}
                 >
-                  <Button onClick={() => decreaseQuantity(product._id)}>-</Button>
+                  <Button onClick={() => decreaseQuantity(product._id)}>
+                    -
+                  </Button>
                   <Button>{cartItem.quantity}</Button>
                   <Button
                     disabled={cartItem.quantity >= product.stock}
@@ -59,7 +73,10 @@ const ProductCard = ({ product }) => {
                 <Button
                   type="primary"
                   disabled={product.stock <= 0}
-                  onClick={(e) => { e.stopPropagation(); addToCart(product); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    addToCart(product);
+                  }}
                 >
                   {product.stock > 0 ? "Add To Cart" : "Out of Stock"}
                 </Button>
@@ -75,7 +92,10 @@ const ProductCard = ({ product }) => {
                     navigate("/login");
                   } else {
                     navigate("/checkout", {
-                      state: { product, quantity: cartItem ? cartItem.quantity : 1 },
+                      state: {
+                        product,
+                        quantity: cartItem ? cartItem.quantity : 1,
+                      },
                     });
                   }
                 }}
@@ -87,7 +107,14 @@ const ProductCard = ({ product }) => {
 
           {isAdmin && (
             <>
-              <Button onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}>Edit</Button>
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditOpen(true);
+                }}
+              >
+                Edit
+              </Button>
               <div onClick={(e) => e.stopPropagation()}>
                 <Popconfirm
                   title="Delete Product"

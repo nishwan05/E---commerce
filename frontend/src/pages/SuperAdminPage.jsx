@@ -1,5 +1,17 @@
 import { useState, useEffect } from "react";
-import { Card, Button, Modal, Form, Input, Typography, message, Table, Checkbox, Space, Popconfirm } from "antd";
+import {
+  Card,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Typography,
+  message,
+  Table,
+  Checkbox,
+  Space,
+  Popconfirm,
+} from "antd";
 import { getPages, createPage } from "../api/pageApi";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { getRoles, createRole, updateRole, deleteRole } from "../api/roleApi";
@@ -35,14 +47,23 @@ const SuperAdminPage = () => {
     }
   };
 
-  useEffect(() => { fetchRoles(); fetchPages(); }, []);
+  useEffect(() => {
+    fetchRoles();
+    fetchPages();
+  }, []);
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
       const roleName = values.role.trim().toLowerCase();
-      const roleExists = roles.some((role) => role.name.toLowerCase() === roleName && role._id !== editingRole?._id);
-      if (roleExists) { message.error("Role already exists"); return; }
+      const roleExists = roles.some(
+        (role) =>
+          role.name.toLowerCase() === roleName && role._id !== editingRole?._id,
+      );
+      if (roleExists) {
+        message.error("Role already exists");
+        return;
+      }
       if (editingRole) {
         await updateRole(editingRole._id, { name: roleName });
         message.success("Role updated successfully");
@@ -97,7 +118,11 @@ const SuperAdminPage = () => {
           <Button
             size="small"
             icon={<EditOutlined />}
-            onClick={() => { setEditingRole(record); form.setFieldsValue({ role: record.name }); setOpen(true); }}
+            onClick={() => {
+              setEditingRole(record);
+              form.setFieldsValue({ role: record.name });
+              setOpen(true);
+            }}
           />
           <Popconfirm
             title="Delete Role"
@@ -119,7 +144,9 @@ const SuperAdminPage = () => {
       dataIndex: "label",
       fixed: "left",
       width: 240,
-      render: (label) => <span className="permission-route-name">+ {label}</span>,
+      render: (label) => (
+        <span className="permission-route-name">+ {label}</span>
+      ),
     },
     ...roles.map((role) => ({
       title: role.name.charAt(0).toUpperCase() + role.name.slice(1),
@@ -128,7 +155,9 @@ const SuperAdminPage = () => {
       render: (_, page) => (
         <Checkbox
           checked={permissions[role.name.toLowerCase()]?.includes(page.key)}
-          onChange={(e) => updatePermission(role.name, page.key, e.target.checked)}
+          onChange={(e) =>
+            updatePermission(role.name, page.key, e.target.checked)
+          }
         />
       ),
     })),
@@ -136,51 +165,105 @@ const SuperAdminPage = () => {
 
   return (
     <div className="super-admin-page">
-      <Title level={4} className="super-admin-title">Roles & Permissions</Title>
+      <Title level={4} className="super-admin-title">
+        Roles & Permissions
+      </Title>
 
       <div className="access-control-layout">
         <Card
           className="access-panel roles-panel"
           title="Roles"
           extra={
-            <Button type="primary" size="small" icon={<PlusOutlined />} onClick={() => { setEditingRole(null); form.resetFields(); setOpen(true); }}>
+            <Button
+              type="primary"
+              size="small"
+              icon={<PlusOutlined />}
+              onClick={() => {
+                setEditingRole(null);
+                form.resetFields();
+                setOpen(true);
+              }}
+            >
               Add Role
             </Button>
           }
         >
-          <Table rowKey="_id" columns={roleColumns} dataSource={roles} pagination={false} size="small" />
+          <Table
+            rowKey="_id"
+            columns={roleColumns}
+            dataSource={roles}
+            pagination={false}
+            size="small"
+          />
         </Card>
 
         <Card
           className="access-panel permissions-panel"
           title="Permissions"
           extra={
-            <Button type="primary" size="small" icon={<PlusOutlined />} onClick={() => { pageForm.resetFields(); setPageOpen(true); }}>
+            <Button
+              type="primary"
+              size="small"
+              icon={<PlusOutlined />}
+              onClick={() => {
+                pageForm.resetFields();
+                setPageOpen(true);
+              }}
+            >
               Add Page
             </Button>
           }
         >
-          <Table rowKey="_id" columns={permissionColumns} dataSource={pages} pagination={false} size="small" scroll={{ x: "max-content" }} />
+          <Table
+            rowKey="_id"
+            columns={permissionColumns}
+            dataSource={pages}
+            pagination={false}
+            size="small"
+            scroll={{ x: "max-content" }}
+          />
         </Card>
       </div>
 
-      <Modal title="Add Page" open={pageOpen} onCancel={() => setPageOpen(false)} onOk={handlePageSubmit}>
+      <Modal
+        title="Add Page"
+        open={pageOpen}
+        onCancel={() => setPageOpen(false)}
+        onOk={handlePageSubmit}
+      >
         <Form form={pageForm} layout="vertical">
-          <Form.Item label="Key" name="key" rules={[{ required: true }]}><Input placeholder="Key" /></Form.Item>
-          <Form.Item label="Label" name="label" rules={[{ required: true }]}><Input placeholder="Name" /></Form.Item>
-          <Form.Item label="Path" name="path" rules={[{ required: true }]}><Input placeholder="/" /></Form.Item>
+          <Form.Item label="Key" name="key" rules={[{ required: true }]}>
+            <Input placeholder="Key" />
+          </Form.Item>
+          <Form.Item label="Label" name="label" rules={[{ required: true }]}>
+            <Input placeholder="Name" />
+          </Form.Item>
+          <Form.Item label="Path" name="path" rules={[{ required: true }]}>
+            <Input placeholder="/" />
+          </Form.Item>
         </Form>
       </Modal>
 
       <Modal
         title={editingRole ? "Edit Role" : "Add Role"}
         open={open}
-        onCancel={() => { form.resetFields(); setEditingRole(null); setOpen(false); }}
+        onCancel={() => {
+          form.resetFields();
+          setEditingRole(null);
+          setOpen(false);
+        }}
         onOk={handleSubmit}
         okText={editingRole ? "Update" : "Add"}
       >
         <Form form={form} layout="vertical">
-          <Form.Item label="Role Name" name="role" rules={[{ required: true, message: "Please enter a role name" }, { min: 3, message: "Role must be at least 3 characters" }]}>
+          <Form.Item
+            label="Role Name"
+            name="role"
+            rules={[
+              { required: true, message: "Please enter a role name" },
+              { min: 3, message: "Role must be at least 3 characters" },
+            ]}
+          >
             <Input placeholder="Enter role name" />
           </Form.Item>
         </Form>

@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { getPermissions, updatePermissionApi } from "../api/permissionApi";
 import { socket } from "../socket";
 
@@ -13,12 +19,18 @@ export const AccessProvider = ({ children }) => {
       setLoading(true);
       const res = await getPermissions();
       const mapped = {};
-      res.data.data.forEach((item) => { mapped[item.role.toLowerCase()] = item.pages || []; });
+      res.data.data.forEach((item) => {
+        mapped[item.role.toLowerCase()] = item.pages || [];
+      });
       setPermissions(mapped);
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => { fetchPermissions(); }, [fetchPermissions]);
+  useEffect(() => {
+    fetchPermissions();
+  }, [fetchPermissions]);
 
   useEffect(() => {
     socket.on("permissionsUpdated", fetchPermissions);
@@ -37,7 +49,15 @@ export const AccessProvider = ({ children }) => {
   };
 
   return (
-    <AccessContext.Provider value={{ permissions, loading, updatePermission, hasAccess, refreshPermissions: fetchPermissions }}>
+    <AccessContext.Provider
+      value={{
+        permissions,
+        loading,
+        updatePermission,
+        hasAccess,
+        refreshPermissions: fetchPermissions,
+      }}
+    >
       {children}
     </AccessContext.Provider>
   );

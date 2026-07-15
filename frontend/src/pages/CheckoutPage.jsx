@@ -233,7 +233,7 @@ const CheckoutPage = () => {
           <Card style={{ position: "sticky", top: 80 }} title="Order Summary">
             {product.image && (
               <img
-                src={`http://localhost:5000${product.image}`}
+                src={`http://localhost:5001${product.image}`}
                 alt={product.name}
                 style={{
                   width: "100%",

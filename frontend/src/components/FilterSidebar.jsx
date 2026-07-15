@@ -14,7 +14,9 @@ const FilterSidebar = () => {
 
   const [displayRange, setDisplayRange] = useState([0, 100000]);
 
-  useEffect(() => { setDisplayRange(priceRange); }, [priceRange]);
+  useEffect(() => {
+    setDisplayRange(priceRange);
+  }, [priceRange]);
 
   const hasActiveFilters =
     selectedBrands.length > 0 || priceRange[0] > 0 || priceRange[1] < 100000;

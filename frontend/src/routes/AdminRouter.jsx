@@ -6,7 +6,18 @@ const AdminRoute = ({ children }) => {
   if (authLoading) return <Spin fullscreen />;
   if (!user) return <Navigate to="/login" replace />;
   if (!["admin", "superadmin"].includes(user.role))
-    return <Result status="403" title="403" subTitle="You are not authorised to this page!" extra={<Button type="primary" href="/">Back Home</Button>} />;
+    return (
+      <Result
+        status="403"
+        title="403"
+        subTitle="You are not authorised to this page!"
+        extra={
+          <Button type="primary" href="/">
+            Back Home
+          </Button>
+        }
+      />
+    );
   return children;
 };
 export default AdminRoute;

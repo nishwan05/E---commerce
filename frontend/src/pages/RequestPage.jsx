@@ -11,8 +11,12 @@ import { socket } from "../socket";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const predefinedIssues = [
-  "Payment Issue", "Refund Request", "Order Not Delivered",
-  "Wrong Product Received", "Damaged Product", "Others",
+  "Payment Issue",
+  "Refund Request",
+  "Order Not Delivered",
+  "Wrong Product Received",
+  "Damaged Product",
+  "Others",
 ];
 
 const RequestPage = () => {
@@ -35,7 +39,9 @@ const RequestPage = () => {
     }
   };
 
-  useEffect(() => { loadTickets(); }, []);
+  useEffect(() => {
+    loadTickets();
+  }, []);
 
   useEffect(() => {
     const userId = String(user?.id || user?._id || "");
@@ -43,7 +49,9 @@ const RequestPage = () => {
     const handleTicketCreated = (ticket) => {
       if (String(ticket.userId) !== userId) return;
       setTickets((prev) => {
-        const exists = prev.some((item) => String(item._id) === String(ticket._id));
+        const exists = prev.some(
+          (item) => String(item._id) === String(ticket._id),
+        );
         return exists ? prev : [ticket, ...prev];
       });
     };
@@ -52,8 +60,10 @@ const RequestPage = () => {
       if (String(updatedTicket.userId) !== userId) return;
       setTickets((prev) =>
         prev.map((ticket) =>
-          String(ticket._id) === String(updatedTicket._id) ? updatedTicket : ticket
-        )
+          String(ticket._id) === String(updatedTicket._id)
+            ? updatedTicket
+            : ticket,
+        ),
       );
     };
 
@@ -68,13 +78,16 @@ const RequestPage = () => {
   const handleRaiseRequest = async () => {
     try {
       const values = await form.validateFields();
-      const subject = selectedIssue === "Others" ? values.subject : selectedIssue;
+      const subject =
+        selectedIssue === "Others" ? values.subject : selectedIssue;
       const description = values.description || "";
       const res = await createTicket({ subject, description });
       const ticket = res.data?.data;
       if (ticket) {
         setTickets((prev) => {
-          const exists = prev.some((item) => String(item._id) === String(ticket._id));
+          const exists = prev.some(
+            (item) => String(item._id) === String(ticket._id),
+          );
           return exists ? prev : [ticket, ...prev];
         });
       }
@@ -87,38 +100,80 @@ const RequestPage = () => {
     }
   };
 
-  const onRowClicked = useCallback((params) => {
-    navigate(`/support/${params.data._id}`);
-  }, [navigate]);
-
-  const columnDefs = useMemo(() => [
-    { headerName: "S.No", valueGetter: (p) => p.node.rowIndex + 1, width: 80, sortable: false, filter: false },
-    { headerName: "Issue Name", field: "subject", flex: 2, filter: true },
-    {
-      headerName: "Status", field: "status", flex: 1, filter: true,
-      cellRenderer: (params) => {
-        const config = {
-          pending: { color: "#d46b08", bg: "#fff7e6", label: "Pending" },
-          claimed: { color: "#096dd9", bg: "#e6f4ff", label: "Claimed" },
-          closed:  { color: "#389e0d", bg: "#f6ffed", label: "Solved"  },
-        };
-        const c = config[params.value] || { color: "gray", bg: "#f0f0f0", label: params.value };
-        return (
-          <span style={{ background: c.bg, color: c.color, border: `1px solid ${c.color}`, borderRadius: 999, padding: "2px 10px", fontSize: 12, fontWeight: 500 }}>
-            {c.label}
-          </span>
-        );
-      },
+  const onRowClicked = useCallback(
+    (params) => {
+      navigate(`/support/${params.data._id}`);
     },
-  ], []);
+    [navigate],
+  );
 
-  const defaultColDef = useMemo(() => ({ sortable: true, resizable: true }), []);
+  const columnDefs = useMemo(
+    () => [
+      {
+        headerName: "S.No",
+        valueGetter: (p) => p.node.rowIndex + 1,
+        width: 80,
+        sortable: false,
+        filter: false,
+      },
+      { headerName: "Issue Name", field: "subject", flex: 2, filter: true },
+      {
+        headerName: "Status",
+        field: "status",
+        flex: 1,
+        filter: true,
+        cellRenderer: (params) => {
+          const config = {
+            pending: { color: "#d46b08", bg: "#fff7e6", label: "Pending" },
+            claimed: { color: "#096dd9", bg: "#e6f4ff", label: "Claimed" },
+            closed: { color: "#389e0d", bg: "#f6ffed", label: "Solved" },
+          };
+          const c = config[params.value] || {
+            color: "gray",
+            bg: "#f0f0f0",
+            label: params.value,
+          };
+          return (
+            <span
+              style={{
+                background: c.bg,
+                color: c.color,
+                border: `1px solid ${c.color}`,
+                borderRadius: 999,
+                padding: "2px 10px",
+                fontSize: 12,
+                fontWeight: 500,
+              }}
+            >
+              {c.label}
+            </span>
+          );
+        },
+      },
+    ],
+    [],
+  );
+
+  const defaultColDef = useMemo(
+    () => ({ sortable: true, resizable: true }),
+    [],
+  );
 
   return (
     <div style={{ padding: 24 }}>
-      <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: 20 }}>
+      <Space
+        style={{
+          width: "100%",
+          justifyContent: "space-between",
+          marginBottom: 20,
+        }}
+      >
         {canRaiseRequest && (
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setOpen(true)}
+          >
             Raise Request
           </Button>
         )}
@@ -142,19 +197,29 @@ const RequestPage = () => {
         title="Raise Request"
         open={canRaiseRequest && open}
         footer={null}
-        onCancel={() => { setOpen(false); form.resetFields(); setSelectedIssue(null); }}
+        onCancel={() => {
+          setOpen(false);
+          form.resetFields();
+          setSelectedIssue(null);
+        }}
       >
         <Form form={form} layout="vertical">
           <Form.Item label="Select Issue" required>
             <Checkbox.Group
               value={selectedIssue ? [selectedIssue] : []}
               onChange={(checkedValues) => {
-                setSelectedIssue(checkedValues.length ? checkedValues[checkedValues.length - 1] : null);
+                setSelectedIssue(
+                  checkedValues.length
+                    ? checkedValues[checkedValues.length - 1]
+                    : null,
+                );
               }}
             >
               <Space direction="vertical">
                 {predefinedIssues.map((issue) => (
-                  <Checkbox key={issue} value={issue}>{issue}</Checkbox>
+                  <Checkbox key={issue} value={issue}>
+                    {issue}
+                  </Checkbox>
                 ))}
               </Space>
             </Checkbox.Group>
@@ -162,10 +227,18 @@ const RequestPage = () => {
 
           {selectedIssue === "Others" && (
             <>
-              <Form.Item label="Subject" name="subject" rules={[{ required: true, message: "Enter subject" }]}>
+              <Form.Item
+                label="Subject"
+                name="subject"
+                rules={[{ required: true, message: "Enter subject" }]}
+              >
                 <Input placeholder="Subject" />
               </Form.Item>
-              <Form.Item label="Problem Faced" name="description" rules={[{ required: true, message: "Enter description" }]}>
+              <Form.Item
+                label="Problem Faced"
+                name="description"
+                rules={[{ required: true, message: "Enter description" }]}
+              >
                 <Input.TextArea rows={4} />
               </Form.Item>
             </>
@@ -178,8 +251,17 @@ const RequestPage = () => {
           )}
 
           <Space>
-            <Button type="primary" onClick={handleRaiseRequest}>Raise Request</Button>
-            <Button onClick={() => { form.resetFields(); setSelectedIssue(null); }}>Clear</Button>
+            <Button type="primary" onClick={handleRaiseRequest}>
+              Raise Request
+            </Button>
+            <Button
+              onClick={() => {
+                form.resetFields();
+                setSelectedIssue(null);
+              }}
+            >
+              Clear
+            </Button>
           </Space>
         </Form>
       </Modal>

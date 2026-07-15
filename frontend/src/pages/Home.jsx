@@ -7,12 +7,7 @@ import FilterSidebar from "../components/FilterSidebar";
 const ProductSkeleton = () => (
   <Card
     className="product-card"
-    cover={
-      <Skeleton.Image
-        active
-        style={{ width: "100%", height: 200 }}
-      />
-    }
+    cover={<Skeleton.Image active style={{ width: "100%", height: 200 }} />}
   >
     <Skeleton active paragraph={{ rows: 3 }} />
   </Card>
@@ -21,7 +16,9 @@ const ProductSkeleton = () => (
 const Home = () => {
   const { products, loading, resetFilters } = useProducts();
 
-  useEffect(() => { resetFilters({}); }, [resetFilters]);
+  useEffect(() => {
+    resetFilters({});
+  }, [resetFilters]);
 
   return (
     <div className="page-layout">

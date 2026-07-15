@@ -8,45 +8,94 @@ import {
   Divider,
   Row,
   Col,
+  Button,
+  Modal,
+  Input,
+  message,
 } from "antd";
 import {
   ShoppingOutlined,
   EnvironmentOutlined,
   PhoneOutlined,
+  EyeOutlined,
+  CloseCircleOutlined,
 } from "@ant-design/icons";
-import { getMyOrders } from "../api/orderApi";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { getMyOrders, cancelOrder } from "../api/orderApi";
+import { socket } from "../socket";
 
 const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 const statusColor = {
   Placed: "blue",
+  Confirmed: "cyan",
+  Packed: "purple",
   Shipped: "orange",
+  "Out for Delivery": "gold",
   Delivered: "green",
   Cancelled: "red",
 };
 
-const paymentLabel = {
-  cod: "Cash on Delivery",
-  upi: "UPI",
-};
+const paymentLabel = { cod: "Cash on Delivery", upi: "UPI" };
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cancelModal, setCancelModal] = useState({
+    open: false,
+    orderId: null,
+  });
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelling, setCancelling] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
+
+  const fetchOrders = async () => {
+    try {
+      const res = await getMyOrders();
+      setOrders(res.data || []);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const res = await getMyOrders();
-        setOrders(res.data || []);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchOrders();
   }, []);
+
+  useEffect(() => {
+    const handleOrderUpdated = (updatedOrder) => {
+      setOrders((prev) =>
+        prev.map((o) =>
+          String(o._id) === String(updatedOrder._id) ? updatedOrder : o,
+        ),
+      );
+    };
+    socket.on("orderUpdated", handleOrderUpdated);
+    return () => socket.off("orderUpdated", handleOrderUpdated);
+  }, []);
+
+  const handleCancel = async () => {
+    try {
+      setCancelling(true);
+      await cancelOrder(cancelModal.orderId, cancelReason);
+      message.success("Order cancelled successfully");
+      setCancelModal({ open: false, orderId: null });
+      setCancelReason("");
+      fetchOrders();
+    } catch (error) {
+      message.error(error.response?.data?.message || "Failed to cancel order");
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const canCancel = (status) =>
+    !["Shipped", "Out for Delivery", "Delivered", "Cancelled"].includes(status);
 
   if (loading) {
     return (
@@ -99,11 +148,7 @@ const OrdersPage = () => {
       </Title>
 
       {orders.map((order) => (
-        <Card
-          key={order._id}
-          style={{ marginBottom: 16, borderRadius: 12 }}
-          styles={{ body: { padding: "20px 24px" } }}
-        >
+        <Card key={order._id} style={{ marginBottom: 16, borderRadius: 12 }}>
           <div
             style={{
               display: "flex",
@@ -120,11 +165,7 @@ const OrdersPage = () => {
               </Text>
               <br />
               <Text
-                style={{
-                  fontFamily: "monospace",
-                  fontSize: 13,
-                  color: "#555",
-                }}
+                style={{ fontFamily: "monospace", fontSize: 13, color: "#555" }}
               >
                 {order._id}
               </Text>
@@ -164,7 +205,22 @@ const OrdersPage = () => {
                       : "none",
                 }}
               >
-                <Col flex="auto">
+                {item.image && (
+                  <Col flex="60px">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      style={{
+                        width: 50,
+                        height: 50,
+                        objectFit: "contain",
+                        borderRadius: 6,
+                        background: "#f5f5f5",
+                      }}
+                    />
+                  </Col>
+                )}
+                <Col flex="auto" style={{ paddingLeft: 8 }}>
                   <Text style={{ fontWeight: 500 }}>{item.name}</Text>
                   <br />
                   <Text type="secondary" style={{ fontSize: 13 }}>
@@ -185,7 +241,7 @@ const OrdersPage = () => {
           <Row justify="space-between" align="bottom" gutter={[16, 12]}>
             <Col xs={24} sm={14}>
               {order.address && (
-                <div>
+                <div style={{ marginBottom: 6 }}>
                   <Text type="secondary" style={{ fontSize: 12 }}>
                     DELIVERY TO
                   </Text>
@@ -211,26 +267,79 @@ const OrdersPage = () => {
                   )}
                 </div>
               )}
-              <Text
-                type="secondary"
-                style={{ fontSize: 13, marginTop: 4, display: "block" }}
-              >
+              <Text type="secondary" style={{ fontSize: 13 }}>
                 Payment: {paymentLabel[order.paymentMode] || order.paymentMode}
+                {" · "}
+                <span
+                  style={{
+                    color: order.paymentStatus === "paid" ? "green" : "orange",
+                    fontWeight: 500,
+                  }}
+                >
+                  {order.paymentStatus === "paid" ? "Paid" : "Pending"}
+                </span>
               </Text>
             </Col>
 
-            <Col xs={24} sm={10} style={{ textAlign: "right" }}>
-              <Text type="secondary" style={{ fontSize: 13 }}>
-                Total Amount
-              </Text>
-              <br />
-              <Text strong style={{ fontSize: 22, color: "#ff6a00" }}>
-                ₹ {order.totalAmount?.toLocaleString()}
-              </Text>
+            <Col xs={24} sm={10}>
+              <div style={{ textAlign: "right", marginBottom: 8 }}>
+                <Text type="secondary" style={{ fontSize: 13 }}>
+                  Total Amount
+                </Text>
+                <br />
+                <Text strong style={{ fontSize: 22, color: "#ff6a00" }}>
+                  ₹ {order.totalAmount?.toLocaleString()}
+                </Text>
+              </div>
+              <div
+                style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}
+              >
+                <Button
+                  size="small"
+                  icon={<EyeOutlined />}
+                  onClick={() => navigate(`/orders/${order._id}`)}
+                >
+                  View Details
+                </Button>
+                {canCancel(order.status) && (
+                  <Button
+                    size="small"
+                    danger
+                    icon={<CloseCircleOutlined />}
+                    onClick={() =>
+                      setCancelModal({ open: true, orderId: order._id })
+                    }
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </div>
             </Col>
           </Row>
         </Card>
       ))}
+
+      <Modal
+        title="Cancel Order"
+        open={cancelModal.open}
+        onCancel={() => {
+          setCancelModal({ open: false, orderId: null });
+          setCancelReason("");
+        }}
+        onOk={handleCancel}
+        okText="Cancel Order"
+        okButtonProps={{ danger: true, loading: cancelling }}
+      >
+        <p style={{ marginBottom: 12 }}>
+          Are you sure you want to cancel this order? Stock will be restored.
+        </p>
+        <TextArea
+          rows={3}
+          placeholder="Reason for cancellation (optional)"
+          value={cancelReason}
+          onChange={(e) => setCancelReason(e.target.value)}
+        />
+      </Modal>
     </div>
   );
 };

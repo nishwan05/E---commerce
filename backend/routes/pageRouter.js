@@ -1,6 +1,14 @@
 const express = require("express");
-const { getPages, createPage, updatePage, deletePage } = require("../controller/pageController");
-const { authMiddleware, adminMiddleware } = require("../middleware/authMiddleware");
+const {
+  getPages,
+  createPage,
+  updatePage,
+  deletePage,
+} = require("../controller/pageController");
+const {
+  authMiddleware,
+  adminMiddleware,
+} = require("../middleware/authMiddleware");
 const router = express.Router();
 router.get("/", getPages);
 router.post("/", authMiddleware, adminMiddleware, createPage);

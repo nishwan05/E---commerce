@@ -14,7 +14,11 @@ const CartSync = () => {
       if (!user) return;
       if (payload.userId && String(payload.userId) !== String(user.id)) return;
       skipSaveRef.current = true;
-      dispatch(loadCart({ user })).finally(() => { setTimeout(() => { skipSaveRef.current = false; }, 0); });
+      dispatch(loadCart({ user })).finally(() => {
+        setTimeout(() => {
+          skipSaveRef.current = false;
+        }, 0);
+      });
     };
     socket.on("cartUpdated", handleCartUpdated);
     return () => socket.off("cartUpdated", handleCartUpdated);
@@ -23,7 +27,11 @@ const CartSync = () => {
   useEffect(() => {
     if (authLoading) return;
     skipSaveRef.current = true;
-    dispatch(loadCart({ user })).finally(() => { setTimeout(() => { skipSaveRef.current = false; }, 0); });
+    dispatch(loadCart({ user })).finally(() => {
+      setTimeout(() => {
+        skipSaveRef.current = false;
+      }, 0);
+    });
   }, [authLoading, dispatch, user]);
 
   useEffect(() => {

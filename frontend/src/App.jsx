@@ -14,14 +14,18 @@ const Layout = () => {
   return (
     <>
       {!hideNavbar && <Navbar />}
-      <div className="page-content"><AppRoutes /></div>
+      <div className="page-content">
+        <AppRoutes />
+      </div>
     </>
   );
 };
 
 const App = () => {
   const dispatch = useDispatch();
-  useEffect(() => { dispatch(fetchCurrentUser()); }, [dispatch]);
+  useEffect(() => {
+    dispatch(fetchCurrentUser());
+  }, [dispatch]);
   return (
     <BrowserRouter>
       <AccessProvider>

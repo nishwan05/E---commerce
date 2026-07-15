@@ -1,5 +1,12 @@
 const express = require("express");
-const { createTicket, getMyTickets, getAllTickets, getTicketById, claimTicket, closeTicket } = require("../controller/ticketController");
+const {
+  createTicket,
+  getMyTickets,
+  getAllTickets,
+  getTicketById,
+  claimTicket,
+  closeTicket,
+} = require("../controller/ticketController");
 const { authMiddleware } = require("../middleware/authMiddleware");
 const router = express.Router();
 router.post("/", authMiddleware, createTicket);

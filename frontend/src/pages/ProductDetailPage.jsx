@@ -26,7 +26,7 @@ const ProductDetailPage = () => {
   useEffect(() => {
     if (!state?.product) {
       axios
-        .get(`http://localhost:5000/api/products/${id}`)
+        .get(`http://localhost:5001/api/products/${id}`)
         .then((res) => setProduct(res?.data?.data || null))
         .catch(() => setProduct(null));
     }
@@ -70,7 +70,7 @@ const ProductDetailPage = () => {
           }}
         >
           <img
-            src={`http://localhost:5000${product.image}`}
+            src={`http://localhost:5001${product.image}`}
             alt={product.name}
             style={{
               width: "100%",

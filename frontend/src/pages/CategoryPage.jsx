@@ -9,12 +9,7 @@ const { Title } = Typography;
 const ProductSkeleton = () => (
   <Card
     className="product-card"
-    cover={
-      <Skeleton.Image
-        active
-        style={{ width: "100%", height: 200 }}
-      />
-    }
+    cover={<Skeleton.Image active style={{ width: "100%", height: 200 }} />}
   >
     <Skeleton active paragraph={{ rows: 3 }} />
   </Card>
@@ -23,7 +18,9 @@ const ProductSkeleton = () => (
 const CategoryPage = ({ category, title }) => {
   const { products, loading, resetFilters } = useProducts();
 
-  useEffect(() => { resetFilters({ category }); }, [category, resetFilters]);
+  useEffect(() => {
+    resetFilters({ category });
+  }, [category, resetFilters]);
 
   return (
     <>
