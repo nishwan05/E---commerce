@@ -25,4 +25,14 @@ const adminMiddleware = (req, res, next) => {
   next();
 };
 
-module.exports = { authMiddleware, adminMiddleware };
+const superAdminMiddleware = (req, res, next) => {
+  const userRole = req.user?.role?.toLowerCase();
+  if (userRole !== "superadmin") {
+    return res
+      .status(403)
+      .json({ success: false, message: "Super admin access only" });
+  }
+  next();
+};
+
+module.exports = { authMiddleware, adminMiddleware, superAdminMiddleware };

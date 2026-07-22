@@ -3,6 +3,7 @@ import { Badge, Popover, List, Button, Typography, Empty } from "antd";
 import { BellOutlined, CheckOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import { socket } from "../socket";
+import { useNavigate } from "react-router-dom";
 import {
   getMyNotifications,
   markAllRead,
@@ -15,6 +16,7 @@ const NotificationBell = () => {
   const { user } = useSelector((state) => state.auth);
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -96,7 +98,13 @@ const NotificationBell = () => {
                 border: "1px solid",
                 borderColor: item.isRead ? "transparent" : "#bae0ff",
               }}
-              onClick={() => !item.isRead && handleMarkOne(item._id)}
+              onClick={async () => {
+                if (!item.isRead) await handleMarkOne(item._id);
+                if (item.refId) {
+                  setOpen(false);
+                  navigate(`/orders/${item.refId}`);
+                }
+              }}
             >
               <div style={{ width: "100%" }}>
                 <div

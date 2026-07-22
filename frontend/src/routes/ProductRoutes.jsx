@@ -11,6 +11,7 @@ import SuperAdminPage from "../pages/SuperAdminPage";
 import PermissionRoute from "./PermissionRoute";
 import SuperAdminRoute from "./SuperAdminRoute";
 import AdminRoute from "./AdminRouter";
+import AuthRoute from "./AuthRoute";
 import SupportTable from "../components/SupportTable";
 import SupportChatPage from "../pages/SupportPage";
 import RequestPage from "../pages/RequestPage";
@@ -18,6 +19,7 @@ import OrdersPage from "../pages/OrdersPage";
 import OrderDetailPage from "../pages/OrderDetailsPage";
 import AdminOrdersPage from "../pages/AdminOrdersPage";
 import NotFoundPage from "../pages/NotFoundPage";
+import ProfilePage from "../pages/ProfilePage";
 
 const AppRoutes = () => (
   <Routes>
@@ -67,22 +69,65 @@ const AppRoutes = () => (
         </SuperAdminRoute>
       }
     />
-    <Route path="/support" element={<SupportTable />} />
-    <Route path="/support/:ticketId" element={<SupportChatPage />} />
-    <Route path="/requests" element={<RequestPage />} />
+    <Route
+      path="/support"
+      element={
+        <AdminRoute>
+          <SupportTable />
+        </AdminRoute>
+      }
+    />
+    <Route
+      path="/support/:ticketId"
+      element={
+        <AuthRoute>
+          <SupportChatPage />
+        </AuthRoute>
+      }
+    />
+    <Route
+      path="/requests"
+      element={
+        <AuthRoute>
+          <RequestPage />
+        </AuthRoute>
+      }
+    />
 
-    <Route path="/orders" element={<OrdersPage />} />
-    <Route path="/orders/:id" element={<OrderDetailPage />} />
+    <Route
+      path="/orders"
+      element={
+        <AuthRoute>
+          <OrdersPage />
+        </AuthRoute>
+      }
+    />
+    <Route
+      path="/orders/:id"
+      element={
+        <AuthRoute>
+          <OrderDetailPage />
+        </AuthRoute>
+      }
+    />
     <Route
       path="/admin/orders"
       element={
-        <AdminRoute>
+        <PermissionRoute page="orders">
           <AdminOrdersPage />
-        </AdminRoute>
+        </PermissionRoute>
       }
     />
 
     <Route path="*" element={<NotFoundPage />} />
+    <Route
+      path="/profile"
+      element={
+        <AuthRoute>
+          <ProfilePage />
+        </AuthRoute>
+      }
+    />
   </Routes>
 );
 

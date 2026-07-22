@@ -8,39 +8,59 @@
 body {
   background: #f5f5f5;
   color: #333;
+  overflow-x: hidden;
+}
+
+nav .sticky-header {
+  position: relative;
 }
 
 .navbar.ant-layout-header {
   background: #e7eb85 !important;
-  height: 60px;
-  line-height: 60px;
-  padding: 0 24px;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+  min-height: 60px;
+  line-height: 1.4;
+  padding: 10px 24px;
+  position: relative;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
   border-bottom: 2px solid #c8cc5e;
 }
 
+.navbar-primary {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+  flex: 1 1 520px;
+}
+
 .navbar-logo {
+  border: 0;
+  background: transparent;
   color: #1c1b1b;
   font-size: 17px;
   font-weight: 800;
   letter-spacing: 3px;
   cursor: pointer;
   flex-shrink: 0;
-  margin-right: 16px;
+  line-height: 1;
+  padding: 8px 0;
 }
 
 .navbar-menu {
   display: flex;
   align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
-.navbar-menu span {
+.navbar-menu button {
+  border: 0;
+  background: transparent;
   color: #1c1b1b;
   font-size: 14px;
   font-weight: 500;
@@ -50,7 +70,7 @@ body {
   transition: color 0.2s;
 }
 
-.navbar-menu span.nav-active {
+.navbar-menu button.nav-active {
   color: #0f58e8;
   font-weight: 700;
 }
@@ -60,7 +80,9 @@ body {
   align-items: center;
   gap: 8px;
   margin-left: auto;
-  flex-shrink: 0;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .navbar-search.ant-input-search {
@@ -131,11 +153,29 @@ body {
   color: #0f58e8 !important;
 }
 
+.search-bar {
+  width: 100%;
+  background: #fff;
+  border-top: 1px solid #e8e8e8;
+  border-bottom: 1px solid #e8e8e8;
+  padding: 16px 4%;
+}
+
+.search-bar .ant-input-search {
+  max-width: 760px;
+  margin: 0 auto;
+  display: block;
+}
+
+.search-bar .ant-input {
+  border-radius: 10px;
+}
+
 .page-content {
   width: 92%;
   max-width: 1400px;
   margin: auto;
-  padding: 25px 0;
+  padding: 25px 0 40px;
 }
 
 .page-layout {
@@ -281,4 +321,35 @@ body {
 .permission-route-name {
   font-weight: 500;
   color: #333;
+}
+
+.navbar-username {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .navbar.ant-layout-header {
+    padding: 10px 16px;
+  }
+
+  .navbar-primary,
+  .navbar-controls {
+    width: 100%;
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+
+  .navbar-primary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .navbar-controls {
+    margin-left: 0;
+  }
+
+  .search-bar-sticky {
+    padding: 12px 16px;
+  }
 }

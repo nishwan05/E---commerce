@@ -5,6 +5,8 @@ const mongoose = require("mongoose");
 const http = require("http");
 const { Server } = require("socket.io");
 const cookieParser = require("cookie-parser");
+const path = require("path");
+const jwt = require("jsonwebtoken");
 
 const Chat = require("./models/chatModel");
 const Ticket = require("./models/ticketModel");
@@ -33,6 +35,7 @@ app.use(
   }),
 );
 app.use(cookieParser());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/products", productRouter);
 app.use("/api/auth", authRouter);
@@ -55,23 +58,60 @@ const io = new Server(server, {
 
 app.set("io", io);
 
+const parseCookieHeader = (cookieHeader = "") =>
+  cookieHeader.split(";").reduce((cookies, part) => {
+    const [key, ...valueParts] = part.trim().split("=");
+    if (!key) return cookies;
+    cookies[key] = decodeURIComponent(valueParts.join("="));
+    return cookies;
+  }, {});
+
+io.use((socket, next) => {
+  const cookies = parseCookieHeader(socket.handshake.headers.cookie);
+  const token = cookies.token;
+  socket.user = null;
+  if (token) {
+    try {
+      socket.user = jwt.verify(token, process.env.JWT_SECRET);
+    } catch {
+      socket.user = null;
+    }
+  }
+  next();
+});
+
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
+  if (["admin", "superadmin"].includes(socket.user?.role)) {
+    socket.join("admins");
+  }
 
   socket.on("joinUserRoom", (userId) => {
+    if (!socket.user || String(socket.user.id) !== String(userId)) return;
     socket.join(`user_${userId}`);
     console.log(`User ${userId} joined personal room`);
   });
 
   socket.on("sendMessage", async (data) => {
+    if (!socket.user || !mongoose.Types.ObjectId.isValid(data.ticketId)) return;
     const ticket = await Ticket.findById(data.ticketId);
     if (!ticket || ticket.status === "closed") return;
-    if (
-      data.sender === "admin" &&
-      ticket.claimedBy?.toString() !== data.adminId
-    )
-      return;
-    const message = await Chat.create(data);
+    const userId = socket.user.id;
+    const isAdmin = ["admin", "superadmin"].includes(socket.user.role);
+    const isOwner = String(ticket.userId) === String(userId);
+    const isAssignedAdmin =
+      isAdmin && String(ticket.claimedBy) === String(userId);
+    if (!isOwner && !isAssignedAdmin) return;
+    const messageText = String(data.message || "").trim();
+    if (!messageText) return;
+    const message = await Chat.create({
+      ticketId: data.ticketId,
+      adminId: isAdmin ? userId : null,
+      sender: isAdmin ? "admin" : "user",
+      name: socket.user.name,
+      role: socket.user.role,
+      message: messageText,
+    });
     const updatedTicket = await Ticket.findByIdAndUpdate(
       data.ticketId,
       { lastMessage: message.message, lastMessageAt: message.createdAt },
@@ -81,16 +121,27 @@ io.on("connection", (socket) => {
     io.emit("conversationUpdated", { message, ticket: updatedTicket });
   });
 
-  socket.on("joinRoom", (ticketId) => {
+  socket.on("joinRoom", async (ticketId) => {
+    if (!socket.user || !mongoose.Types.ObjectId.isValid(ticketId)) return;
+    const ticket = await Ticket.findById(ticketId);
+    if (!ticket) return;
+    const isAdmin = ["admin", "superadmin"].includes(socket.user.role);
+    const isOwner = String(ticket.userId) === String(socket.user.id);
+    if (!isAdmin && !isOwner) return;
     socket.join(ticketId);
     console.log(`Joined room ${ticketId}`);
   });
 
   socket.on("claimTicket", async ({ ticketId, adminId, adminName }) => {
+    if (!["admin", "superadmin"].includes(socket.user?.role)) return;
     if (!mongoose.Types.ObjectId.isValid(ticketId)) return;
     const ticket = await Ticket.findOneAndUpdate(
       { _id: ticketId, status: "pending" },
-      { status: "claimed", claimedBy: adminId, claimedByName: adminName },
+      {
+        status: "claimed",
+        claimedBy: socket.user.id,
+        claimedByName: socket.user.name || adminName,
+      },
       { returnDocument: "after" },
     );
     if (!ticket) return;
@@ -98,12 +149,13 @@ io.on("connection", (socket) => {
   });
 
   socket.on("closeTicket", async ({ ticketId, userId }) => {
+    if (!socket.user) return;
     if (!mongoose.Types.ObjectId.isValid(ticketId)) return;
     const ticket = await Ticket.findOneAndUpdate(
       {
         _id: ticketId,
         status: { $ne: "closed" },
-        $or: [{ userId }, { claimedBy: userId }],
+        $or: [{ userId: socket.user.id }, { claimedBy: socket.user.id }],
       },
       { status: "closed" },
       { returnDocument: "after" },

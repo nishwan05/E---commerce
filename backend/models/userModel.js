@@ -10,6 +10,16 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     password: { type: String, required: true, minlength: 6 },
+    profilePicture: { type: String, default: "" },
+    dateOfBirth: { type: String, default: "" },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other", ""],
+      default: "",
+    },
+    mobile: { type: String, default: "" },
+    address: { type: String, default: "" },
+    pincode: { type: String, default: "" },
     role: { type: String, default: "member" },
     isActive: { type: Boolean, default: true },
     cart: {

@@ -5,9 +5,9 @@ const {
 } = require("../controller/permissionController");
 const {
   authMiddleware,
-  adminMiddleware,
+  superAdminMiddleware,
 } = require("../middleware/authMiddleware");
 const router = express.Router();
 router.get("/", getPermissions);
-router.put("/", authMiddleware, adminMiddleware, updatePermission);
+router.put("/", authMiddleware, superAdminMiddleware, updatePermission);
 module.exports = router;

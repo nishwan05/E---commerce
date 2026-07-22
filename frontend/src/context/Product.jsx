@@ -19,6 +19,13 @@ import { socket } from "../socket";
 const ProductContext = createContext();
 const defaultPriceRange = [0, 100000];
 
+const isAbortError = (error) =>
+  error?.name === "CanceledError" ||
+  error?.name === "AbortError" ||
+  error?.code === "ERR_CANCELED" ||
+  error?.message === "canceled" ||
+  error?.message === "The operation was aborted.";
+
 const sortProducts = (order, list = []) => {
   const sorted = [...list];
   if (!order) return sorted;
@@ -68,7 +75,9 @@ export const ProductProvider = ({ children }) => {
         ),
       );
     } catch (error) {
-      console.log(error);
+      if (!isAbortError(error)) {
+        console.error(error);
+      }
     } finally {
       if (reqId === productReqId.current) setLoading(false);
     }

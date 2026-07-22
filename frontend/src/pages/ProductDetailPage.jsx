@@ -9,6 +9,7 @@ import {
 } from "@ant-design/icons";
 import { useCart } from "../features/cart/useCart";
 import { useSelector } from "react-redux";
+import { getMediaUrl } from "../utils/media";
 
 const { Title, Text } = Typography;
 
@@ -70,7 +71,7 @@ const ProductDetailPage = () => {
           }}
         >
           <img
-            src={`http://localhost:5001${product.image}`}
+            src={getMediaUrl(product.image)}
             alt={product.name}
             style={{
               width: "100%",

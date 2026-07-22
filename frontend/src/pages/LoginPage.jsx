@@ -51,7 +51,11 @@ const LoginPage = () => {
               { type: "email", message: "Enter a valid email address" },
             ]}
           >
-            <Input placeholder="@example.com" size="large" />
+            <Input
+              placeholder="@example.com"
+              size="large"
+              autoComplete="email"
+            />
           </Form.Item>
           <Form.Item
             label="Password"

@@ -1,67 +1,39 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Layout, Button, Badge, Input, Select, Divider, message } from "antd";
-import { useMemo } from "react";
-import { useAccess } from "../context/AccessContext";
-import { getPages } from "../api/pageApi";
+import { Layout, Button, Badge, Divider, message, Dropdown, Avatar } from "antd";
 import {
+  UserOutlined,
+  ShoppingOutlined,
   ShoppingCartOutlined,
   PlusOutlined,
   LogoutOutlined,
   OrderedListOutlined,
 } from "@ant-design/icons";
+import { useAccess } from "../context/AccessContext";
+import { getPages } from "../api/pageApi";
 import { useCart } from "../features/cart/useCart";
 import { useProducts } from "../context/Product";
 import ProductModal from "./ProductModal";
 import CartDrawer from "./CartDrawer";
 import NotificationBell from "./NotificationBell";
 import { useSelector, useDispatch } from "react-redux";
-import debounce from "lodash/debounce";
 import { logout } from "../features/auth/authSlice";
+import { getMediaUrl } from "../utils/media";
 
 const { Header } = Layout;
-
-const categoryMap = {
-  "/mobiles": "mobile",
-  "/electronics": "electronics",
-  "/fashion": "fashion",
-};
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
-  const currentCategory = categoryMap[location.pathname] || null;
   const { totalItems } = useCart();
   const [cartOpen, setCartOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [pages, setPages] = useState([]);
-  const { fetchProducts, fetchBrands, handleSort, sortOrder, resetFilters } =
-    useProducts();
+  const { fetchProducts, fetchBrands, resetFilters } = useProducts();
   const { hasAccess } = useAccess();
-
-  const debouncedSearch = useMemo(
-    () =>
-      debounce((value) => {
-        if (value.trim()) {
-          fetchProducts({
-            search: value,
-            ...(currentCategory && { category: currentCategory }),
-          });
-        } else {
-          fetchProducts(currentCategory ? { category: currentCategory } : {});
-        }
-      }, 300),
-    [fetchProducts, currentCategory],
-  );
-
-  useEffect(() => {
-    return () => {
-      debouncedSearch.cancel();
-    };
-  }, [debouncedSearch]);
 
   useEffect(() => {
     const fetchPages = async () => {
@@ -75,6 +47,13 @@ const Navbar = () => {
     fetchPages();
   }, []);
 
+  const goHome = () => {
+    resetFilters({});
+    fetchProducts();
+    fetchBrands();
+    navigate("/");
+  };
+
   const isAdmin = ["admin", "superadmin"].includes(user?.role);
   const isSuperAdmin = user?.role === "superadmin";
 
@@ -83,59 +62,56 @@ const Navbar = () => {
     return hasAccess(user.role, page.key);
   });
 
+  const handleLogout = async () => {
+    try {
+      setLogoutLoading(true);
+      await dispatch(logout()).unwrap();
+      localStorage.removeItem("cart");
+      resetFilters({});
+      message.success("Logout successful");
+      navigate("/");
+    } catch {
+      message.error("Logout failed");
+    } finally {
+      setLogoutLoading(false);
+    }
+  };
+
   return (
     <>
       <Header className="navbar">
-        <div
-          className="navbar-logo"
-          onClick={() => {
-            resetFilters({});
-            fetchProducts();
-            fetchBrands();
-            navigate("/");
-          }}
-        >
-          EVEREST
+        <div className="navbar-primary">
+          <button className="navbar-logo" type="button" onClick={goHome}>
+            EVEREST
+          </button>
+
+          <nav className="navbar-menu">
+            <button
+              type="button"
+              className={location.pathname === "/" ? "nav-active" : ""}
+              onClick={goHome}
+            >
+              Home
+            </button>
+
+            {visiblePages.map((page) => (
+              <button
+                key={page._id}
+                type="button"
+                className={location.pathname === page.path ? "nav-active" : ""}
+                onClick={() => navigate(page.path)}
+              >
+                {page.label}
+              </button>
+            ))}
+
+            {user && !isAdmin && (
+              <Button type="primary" onClick={() => navigate("/requests")}>
+                Raise Request
+              </Button>
+            )}
+          </nav>
         </div>
-
-        <nav className="navbar-menu">
-          <span
-            className={location.pathname === "/" ? "nav-active" : ""}
-            onClick={() => {
-              resetFilters({});
-              fetchProducts();
-              fetchBrands();
-              navigate("/");
-            }}
-          >
-            Home
-          </span>
-
-          {visiblePages.map((page) => (
-            <span
-              key={page._id}
-              className={location.pathname === page.path ? "nav-active" : ""}
-              onClick={() => navigate(page.path)}
-            >
-              {page.label}
-            </span>
-          ))}
-
-          {user && !isAdmin && (
-            <span
-              className={location.pathname === "/orders" ? "nav-active" : ""}
-              onClick={() => navigate("/orders")}
-            >
-              My Orders
-            </span>
-          )}
-
-          {user && !isAdmin && (
-            <Button type="primary" onClick={() => navigate("/requests")}>
-              Raise Request
-            </Button>
-          )}
-        </nav>
 
         <div className="navbar-controls">
           {isSuperAdmin && (
@@ -144,38 +120,14 @@ const Navbar = () => {
             </Button>
           )}
 
-          <Input.Search
-            className="navbar-search"
-            placeholder="Search products..."
-            allowClear
-            onChange={(e) => debouncedSearch(e.target.value)}
-          />
-
-          <Select
-            className="navbar-sort"
-            placeholder="Sort by"
-            value={sortOrder}
-            onClear={() => handleSort(null)}
-            onChange={(value) => handleSort(value)}
-            style={{ width: 160 }}
-            options={[
-              { label: "Default", value: "default" },
-              { label: "Name: A → Z", value: "name-asc" },
-              { label: "Name: Z → A", value: "name-desc" },
-              { label: "Price: Low → High", value: "price-asc" },
-              { label: "Price: High → Low", value: "price-desc" },
-            ]}
-          />
-
           {isAdmin && (
             <Button onClick={() => navigate("/support")}>Support</Button>
           )}
 
-          {isAdmin && (
+          {user && hasAccess(user.role, "orders") && (
             <Button
               icon={<OrderedListOutlined />}
               onClick={() => navigate("/admin/orders")}
-              title="All Orders"
             >
               Orders
             </Button>
@@ -196,38 +148,55 @@ const Navbar = () => {
           {user && <NotificationBell />}
 
           {user ? (
-            <>
-              <span className="navbar-username">
-                Hi, {user?.name?.split(" ")[0] || "User"}
-              </span>
-              <Button
-                icon={<LogoutOutlined />}
-                className="navbar-ghost-btn"
-                loading={logoutLoading}
-                onClick={async () => {
-                  try {
-                    setLogoutLoading(true);
-                    await dispatch(logout()).unwrap();
-                    localStorage.removeItem("cart");
-                    resetFilters({});
-                    handleSort(null);
-                    message.success("Logout successful");
-                    navigate("/");
-                  } catch {
-                    message.error("Logout failed");
-                  } finally {
-                    setLogoutLoading(false);
-                  }
-                }}
-              >
-                Logout
-              </Button>
-            </>
-          ) : (
-            <Button
-              className="navbar-ghost-btn"
-              onClick={() => navigate("/login")}
+            <Dropdown
+              placement="bottomRight"
+              trigger={["click"]}
+              menu={{
+                items: [
+                  {
+                    key: "profile-header",
+                    label: (
+                      <div style={{ padding: "4px 0", minWidth: 180 }}>
+                        <div style={{ fontWeight: 600 }}>{user.name}</div>
+                        <div style={{ fontSize: 12, color: "#888" }}>
+                          {user.email}
+                        </div>
+                      </div>
+                    ),
+                    disabled: true,
+                  },
+                  { type: "divider" },
+                  {
+                    key: "profile",
+                    icon: <UserOutlined />,
+                    label: "My Profile",
+                    onClick: () => navigate("/profile"),
+                  },
+                  {
+                    key: "orders",
+                    icon: <ShoppingOutlined />,
+                    label: "My Orders",
+                    onClick: () => navigate("/orders"),
+                  },
+                  { type: "divider" },
+                  {
+                    key: "logout",
+                    icon: <LogoutOutlined />,
+                    label: logoutLoading ? "Logging out..." : "Logout",
+                    danger: true,
+                    onClick: handleLogout,
+                  },
+                ],
+              }}
             >
+              <Avatar
+                icon={<UserOutlined />}
+                src={getMediaUrl(user.profilePicture)}
+                style={{ cursor: "pointer", background: "#1677ff" }}
+              />
+            </Dropdown>
+          ) : (
+            <Button className="navbar-ghost-btn" onClick={() => navigate("/login")}>
               Login
             </Button>
           )}

@@ -74,6 +74,8 @@ const ProductModal = ({
       onCancel={onClose}
       onOk={handleSubmit}
       okText={mode === "create" ? "Create" : "Update"}
+      centered
+      width={560}
     >
       <Form form={form} layout="vertical">
         <Form.Item label="Name" name="name" rules={[{ required: true }]}>

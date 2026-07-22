@@ -1,4 +1,5 @@
 const Chat = require("../models/chatModel");
+const Ticket = require("../models/ticketModel");
 
 const getMessages = async (req, res) => {
   try {
@@ -31,6 +32,17 @@ const getConversations = async (req, res) => {
 
 const getMessagesByTicket = async (req, res) => {
   try {
+    const ticket = await Ticket.findById(req.params.ticketId);
+    if (!ticket) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Ticket not found" });
+    }
+    const isOwner = String(ticket.userId) === String(req.user.id);
+    const isAdmin = ["admin", "superadmin"].includes(req.user.role);
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ success: false, message: "Access denied" });
+    }
     const messages = await Chat.find({ ticketId: req.params.ticketId }).sort({
       createdAt: 1,
     });

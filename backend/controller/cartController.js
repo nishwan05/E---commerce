@@ -28,7 +28,7 @@ const updateCart = async (req, res) => {
         .status(404)
         .json({ success: false, message: "User not found" });
     const io = req.app.get("io");
-    io.emit("cartUpdated", { userId: req.user.id });
+    io.to(`user_${req.user.id}`).emit("cartUpdated", { userId: req.user.id });
     res
       .status(200)
       .json({ success: true, message: "Cart synced successfully" });

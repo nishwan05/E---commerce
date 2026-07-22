@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import {
   Card,
   Tag,
@@ -22,6 +23,7 @@ import {
 import { getOrderById, cancelOrder } from "../api/orderApi";
 import { socket } from "../socket";
 import OrderTimeline from "../components/OrderTimeline";
+import { getMediaUrl } from "../utils/media";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -46,6 +48,8 @@ const OrderDetailPage = () => {
   const [cancelModal, setCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
+  const { user } = useSelector((state) => state.auth);
+  const isAdmin = ["admin", "superadmin"].includes(user?.role);
 
   const fetchOrder = async () => {
     try {
@@ -122,7 +126,7 @@ const OrderDetailPage = () => {
       <Button
         type="text"
         icon={<ArrowLeftOutlined />}
-        onClick={() => navigate("/orders")}
+        onClick={() => navigate(isAdmin ? "/admin/orders" : "/orders")}
         style={{ marginBottom: 24, paddingLeft: 0 }}
       >
         Back to Orders
@@ -212,7 +216,7 @@ const OrderDetailPage = () => {
                 {item.image && (
                   <Col flex="70px">
                     <img
-                      src={item.image}
+                      src={getMediaUrl(item.image)}
                       alt={item.name}
                       style={{
                         width: 60,

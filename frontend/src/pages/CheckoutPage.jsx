@@ -15,6 +15,7 @@ import {
 } from "antd";
 import { ArrowLeftOutlined, CheckCircleFilled } from "@ant-design/icons";
 import { placeOrder } from "../api/orderApi";
+import { getMediaUrl } from "../utils/media";
 
 const { Title, Text } = Typography;
 const UPI_QR_IMAGE = new URL("../assets/UPI QR.jpeg", import.meta.url).href;
@@ -233,7 +234,7 @@ const CheckoutPage = () => {
           <Card style={{ position: "sticky", top: 80 }} title="Order Summary">
             {product.image && (
               <img
-                src={`http://localhost:5001${product.image}`}
+                src={getMediaUrl(product.image)}
                 alt={product.name}
                 style={{
                   width: "100%",

@@ -4,8 +4,12 @@ const {
   getConversations,
   getMessagesByTicket,
 } = require("../controller/chatController");
+const {
+  authMiddleware,
+  adminMiddleware,
+} = require("../middleware/authMiddleware");
 const router = express.Router();
-router.get("/conversations", getConversations);
-router.get("/tickets/:ticketId", getMessagesByTicket);
-router.get("/:email", getMessages);
+router.get("/conversations", authMiddleware, adminMiddleware, getConversations);
+router.get("/tickets/:ticketId", authMiddleware, getMessagesByTicket);
+router.get("/:email", authMiddleware, adminMiddleware, getMessages);
 module.exports = router;

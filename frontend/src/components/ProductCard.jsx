@@ -5,6 +5,7 @@ import { useProducts } from "../context/Product";
 import ProductModal from "./ProductModal";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { getMediaUrl } from "../utils/media";
 
 const ProductCard = ({ product }) => {
   const { cartItems, addToCart, increaseQuantity, decreaseQuantity } =
@@ -30,7 +31,7 @@ const ProductCard = ({ product }) => {
         cover={
           <img
             alt={product.name}
-            src={`http://localhost:5001${product.image}`}
+            src={getMediaUrl(product.image)}
             style={{ height: "200px", objectFit: "contain" }}
           />
         }

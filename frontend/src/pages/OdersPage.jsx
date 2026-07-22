@@ -21,9 +21,9 @@ import {
   CloseCircleOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { getMyOrders, cancelOrder } from "../api/orderApi";
 import { socket } from "../socket";
+import { getMediaUrl } from "../utils/media";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -50,7 +50,6 @@ const OrdersPage = () => {
   const [cancelReason, setCancelReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.auth);
 
   const fetchOrders = async () => {
     try {
@@ -208,7 +207,7 @@ const OrdersPage = () => {
                 {item.image && (
                   <Col flex="60px">
                     <img
-                      src={item.image}
+                      src={getMediaUrl(item.image)}
                       alt={item.name}
                       style={{
                         width: 50,

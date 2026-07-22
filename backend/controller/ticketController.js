@@ -11,7 +11,9 @@ const createTicket = async (req, res) => {
       subject,
       description,
     });
-    req.app.get("io")?.emit("ticketCreated", ticket);
+    const io = req.app.get("io");
+    io?.to("admins").emit("ticketCreated", ticket);
+    io?.to(`user_${req.user.id}`).emit("ticketCreated", ticket);
     res.status(201).json({ success: true, data: ticket });
   } catch (error) {
     res
@@ -49,6 +51,11 @@ const getTicketById = async (req, res) => {
       return res
         .status(404)
         .json({ success: false, message: "Ticket not found" });
+    const isOwner = String(ticket.userId) === String(req.user.id);
+    const isAdmin = ["admin", "superadmin"].includes(req.user.role);
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ success: false, message: "Access denied" });
+    }
     res.json({ success: true, data: ticket });
   } catch {
     res.status(500).json({ success: false, message: "Failed" });
